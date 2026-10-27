@@ -1,0 +1,27 @@
+# Keil build output
+MDK-ARM/Frypi-LED/
+MDK-ARM/.vscode/
+MDK-ARM/*.uvguix.*
+MDK-ARM/*.bak
+MDK-ARM/*.dep
+MDK-ARM/*.user
+MDK-ARM/*.scvd
+
+# Generic embedded build artifacts
+*.axf
+*.elf
+*.hex
+*.bin
+*.o
+*.d
+*.crf
+*.lst
+*.map
+*.lnp
+*.build_log.htm
+
+# Editor and OS files
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
