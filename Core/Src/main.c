@@ -32,6 +32,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define KEY_DEBOUNCE_MS 20U
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -42,6 +44,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+static GPIO_PinState raw_key_state = GPIO_PIN_SET;
+static GPIO_PinState stable_key_state = GPIO_PIN_SET;
+static uint32_t key_state_change_tick = 0U;
 
 /* USER CODE END PV */
 
@@ -88,23 +94,39 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
+  raw_key_state = HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin);
+  stable_key_state = raw_key_state;
+  key_state_change_tick = HAL_GetTick();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-while (1)
-{
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
+  while (1)
+  {
+    GPIO_PinState current_key_state = HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin);
+    uint32_t current_tick = HAL_GetTick();
+
+    if (current_key_state != raw_key_state)
     {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    }
-    else
-    {
-        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+      raw_key_state = current_key_state;
+      key_state_change_tick = current_tick;
     }
 
-    HAL_Delay(10);
-}
+    if ((raw_key_state != stable_key_state) &&
+        ((current_tick - key_state_change_tick) >= KEY_DEBOUNCE_MS))
+    {
+      stable_key_state = raw_key_state;
+
+      /* KEY1 is active-low: toggle once when the debounced press is accepted. */
+      if (stable_key_state == GPIO_PIN_RESET)
+      {
+        HAL_GPIO_TogglePin(LED_T_GPIO_Port, LED_T_Pin);
+      }
+    }
+
+    HAL_Delay(1);
+  }
   /* USER CODE END 3 */
 }
 

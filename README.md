@@ -10,7 +10,8 @@ STM32CubeMX and Keil MDK project for the FryPi board.
 
 ## Current behavior
 
-The LED turns on while KEY1 is pressed and turns off when the key is released.
+Each debounced KEY1 press toggles the LED state. The application detects the
+falling edge of the active-low key instead of repeatedly toggling while it is held.
 
 ## Workflow
 
@@ -19,4 +20,3 @@ The LED turns on while KEY1 is pressed and turns off when the key is released.
 3. Edit code in VS Code.
 4. Run the default build task with `Ctrl+Shift+B`.
 5. Run `Tasks: Run Task` → `Keil: Download` to build and flash through ST-Link.
-
