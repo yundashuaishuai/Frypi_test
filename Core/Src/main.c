@@ -48,6 +48,7 @@
 static GPIO_PinState raw_key_state = GPIO_PIN_SET;
 static GPIO_PinState stable_key_state = GPIO_PIN_SET;
 static uint32_t key_state_change_tick = 0U;
+static uint32_t last_press_tick = 0;
 
 /* USER CODE END PV */
 
@@ -94,7 +95,7 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
-  raw_key_state = HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin);
+  raw_key_state = HAL_GPIO_ReadPin(Key1_GPIO_Port, Key1_Pin);
   stable_key_state = raw_key_state;
   key_state_change_tick = HAL_GetTick();
 
@@ -104,28 +105,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    GPIO_PinState current_key_state = HAL_GPIO_ReadPin(KEY1_GPIO_Port, KEY1_Pin);
-    uint32_t current_tick = HAL_GetTick();
+    /* USER CODE END WHILE */
 
-    if (current_key_state != raw_key_state)
-    {
-      raw_key_state = current_key_state;
-      key_state_change_tick = current_tick;
-    }
-
-    if ((raw_key_state != stable_key_state) &&
-        ((current_tick - key_state_change_tick) >= KEY_DEBOUNCE_MS))
-    {
-      stable_key_state = raw_key_state;
-
-      /* KEY1 is active-low: toggle once when the debounced press is accepted. */
-      if (stable_key_state == GPIO_PIN_RESET)
-      {
-        HAL_GPIO_TogglePin(LED_T_GPIO_Port, LED_T_Pin);
-      }
-    }
-
-    HAL_Delay(1);
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -197,11 +179,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_T_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : KEY1_Pin */
-  GPIO_InitStruct.Pin = KEY1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pin : Key1_Pin */
+  GPIO_InitStruct.Pin = Key1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(KEY1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Key1_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -209,7 +195,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == Key1_Pin)
+    {
+        uint32_t now = HAL_GetTick();
 
+        if ((now - last_press_tick) >= 50)
+        {
+            HAL_GPIO_TogglePin(LED_T_GPIO_Port, LED_T_Pin);
+            last_press_tick = now;
+        }
+    }
+}
 /* USER CODE END 4 */
 
 /**

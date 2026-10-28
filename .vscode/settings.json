@@ -3,5 +3,6 @@
     "files.associations": {
         "*.h": "c"
     },
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "cmake.sourceDirectory": "D:/stm32cubemx/OVwatchtest1/Frypi-LED/Drivers/CMSIS/NN"
 }
